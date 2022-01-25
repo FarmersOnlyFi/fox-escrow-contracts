@@ -2,10 +2,10 @@
 pragma solidity ^0.8.11;
 
 import {IERC20} from "../../interfaces/Interfaces.sol";
-import {LockedJewelOffer} from "../../LockedJewelOffer.sol";
+import {LockedTokenOffer} from "../../LockedJewelOffer.sol";
 
 contract Trader {
-    function fillOffer(LockedJewelOffer offer) public {
+    function fillOffer(LockedTokenOffer offer) public {
         offer.fill();
     }
 

@@ -1,29 +1,30 @@
 // SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.11;
 
-import {IERC20, IJewelToken, IOwnable} from "./interfaces/Interfaces.sol";
+import {IERC20, ILockedToken, IOwnable, IOfferFactory} from "./interfaces/Interfaces.sol";
 
-contract LockedJewelOffer {
+contract LockedTokenOffer {
     address public immutable factory;
     address public immutable seller;
+    address public immutable lockedTokenAddress;
     address public immutable tokenWanted;
     uint256 public immutable amountWanted;
     uint256 public immutable fee; // in bps
     bool public hasEnded = false;
 
-    IJewelToken JEWEL = IJewelToken(0x72Cb10C6bfA5624dD07Ef608027E366bd690048F);
-
-    event OfferFilled(address buyer, uint256 jewelAmount, address token, uint256 tokenAmount);
-    event OfferCanceled(address seller, uint256 jewelAmount);
+    event OfferFilled(address buyer, uint256 lockedTokenAmount, address token, uint256 tokenAmount);
+    event OfferCanceled(address seller, uint256 lockedTokenAmount);
 
     constructor(
         address _seller,
+        address _lockedTokenAddress,
         address _tokenWanted,
         uint256 _amountWanted,
         uint256 _fee
     ) {
         factory = msg.sender;
         seller = _seller;
+        lockedTokenAddress = _lockedTokenAddress;
         tokenWanted = _tokenWanted;
         amountWanted = _amountWanted;
         fee = _fee;
@@ -41,9 +42,9 @@ contract LockedJewelOffer {
     }
 
     function fill() public {
-        require(hasJewel(), "no JEWEL balance");
+        require(hasLockedToken(), "no Locked Token balance");
         require(!hasEnded, "sell has been previously cancelled");
-        uint256 balance = JEWEL.totalBalanceOf(address(this));
+        uint256 balance = ILockedToken(lockedTokenAddress).totalBalanceOf(address(this));
         uint256 txFee = mulDiv(amountWanted, fee, 10_000);
 
         // cap fee at 25k
@@ -52,25 +53,25 @@ contract LockedJewelOffer {
 
         uint256 amountAfterFee = amountWanted - txFee;
         // collect fee
-        safeTransferFrom(tokenWanted, msg.sender, IOwnable(factory).owner(), txFee);
+        _sendFees(txFee);
         // exchange assets
         safeTransferFrom(tokenWanted, msg.sender, seller, amountAfterFee);
-        JEWEL.transferAll(msg.sender);
+        ILockedToken(lockedTokenAddress).transferAll(msg.sender);
         hasEnded = true;
         emit OfferFilled(msg.sender, balance, tokenWanted, amountWanted);
     }
 
     function cancel() public {
-        require(hasJewel(), "no JEWEL balance");
+        require(hasLockedToken(), "no Locked Token balance");
         require(msg.sender == seller);
-        uint256 balance = JEWEL.totalBalanceOf(address(this));
-        JEWEL.transferAll(seller);
+        uint256 balance = ILockedToken(lockedTokenAddress).totalBalanceOf(address(this));
+        ILockedToken(lockedTokenAddress).transferAll(seller);
         hasEnded = true;
         emit OfferCanceled(seller, balance);
     }
 
-    function hasJewel() public view returns (bool) {
-        return JEWEL.totalBalanceOf(address(this)) > 0;
+    function hasLockedToken() public view returns (bool) {
+        return ILockedToken(lockedTokenAddress).totalBalanceOf(address(this)) > 0;
     }
 
     function mulDiv(
@@ -79,6 +80,16 @@ contract LockedJewelOffer {
         uint256 z
     ) public pure returns (uint256) {
         return (x * y) / z;
+    }
+
+    function _sendFees(uint256 feeAmount) internal {
+        uint256 escrowFeeAmount = mulDiv(feeAmount, 2, 3);  // 2/3rds of fee here
+        uint256 xFoxFeeAmount = (feeAmount - escrowFeeAmount) / 2;
+        uint256 devFeeAmount = feeAmount - escrowFeeAmount - xFoxFeeAmount;
+
+        safeTransferFrom(tokenWanted, msg.sender, IOfferFactory(factory).escrowMultisigFeeAddress(), escrowFeeAmount);
+        safeTransferFrom(tokenWanted, msg.sender, IOfferFactory(factory).xFoxAddress(), xFoxFeeAmount);
+        safeTransferFrom(tokenWanted, msg.sender, IOfferFactory(factory).devAddress(), devFeeAmount);
     }
 
     function safeTransfer(

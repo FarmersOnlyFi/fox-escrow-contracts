@@ -5,7 +5,7 @@ import {DSTest} from "@ds-test/test.sol";
 
 import {IERC20, IJewelToken} from "../interfaces/Interfaces.sol";
 import {OfferFactory} from "../OfferFactory.sol";
-import {LockedJewelOffer} from "../LockedJewelOffer.sol";
+import {LockedTokenOffer} from "../LockedJewelOffer.sol";
 
 import {FactoryDeployer} from "./user/FactoryDeployer.sol";
 import {Trader} from "./user/Trader.sol";
@@ -20,7 +20,7 @@ contract LockedJewelOfferTest is DSTest {
     Vm constant VM = Vm(HEVM_ADDRESS);
 
     address public constant USDC = 0x985458E523dB3d53125813eD68c274899e9DfAb4;
-    IJewelToken JEWEL = IJewelToken(0x72Cb10C6bfA5624dD07Ef608027E366bd690048F);
+    ILockedToken JEWEL = IJewelToken(0x72Cb10C6bfA5624dD07Ef608027E366bd690048F);
 
     function setUp() public {
         factoryDeployer = new FactoryDeployer();
@@ -36,7 +36,7 @@ contract LockedJewelOfferTest is DSTest {
     }
 
     function testFailFillNoApproval() public {
-        LockedJewelOffer offer = factory.createOffer(USDC, 5 * 1e6);
+        LockedTokenOffer offer = factory.createOffer(USDC, 5 * 1e6);
 
         // fund the contract
         JEWEL.transferAll(address(offer));
@@ -45,7 +45,7 @@ contract LockedJewelOfferTest is DSTest {
     }
 
     function testFailFillCantAfford() public {
-        LockedJewelOffer offer = factory.createOffer(USDC, 11 * 1e6);
+        LockedTokenOffer offer = factory.createOffer(USDC, 11 * 1e6);
 
         // fund the contract
         JEWEL.transferAll(address(offer));
@@ -55,7 +55,7 @@ contract LockedJewelOfferTest is DSTest {
     }
 
     function testFill() public {
-        LockedJewelOffer offer = factory.createOffer(USDC, 5 * 1e6);
+        LockedTokenOffer offer = factory.createOffer(USDC, 5 * 1e6);
 
         // fund the contract
         JEWEL.transferAll(address(offer));
@@ -79,7 +79,7 @@ contract LockedJewelOfferTest is DSTest {
     }
 
     function testWithdraw() public {
-        LockedJewelOffer offer = factory.createOffer(USDC, 5 * 1e6);
+        LockedTokenOffer offer = factory.createOffer(USDC, 5 * 1e6);
 
         trader.approve(USDC, address(this));
         // transfer 1000 USDC to offer
@@ -92,12 +92,12 @@ contract LockedJewelOfferTest is DSTest {
     }
 
     function testFailCancel() public {
-        LockedJewelOffer offer = factory.createOffer(USDC, 5 * 1e6);
+        LockedTokenOffer offer = factory.createOffer(USDC, 5 * 1e6);
         offer.cancel();
     }
 
     function testCancel() public {
-        LockedJewelOffer offer = factory.createOffer(USDC, 5 * 1e6);
+        LockedTokenOffer offer = factory.createOffer(USDC, 5 * 1e6);
 
         uint256 preBal = JEWEL.totalBalanceOf(address(this));
         // transfer all of our locked JEWEL

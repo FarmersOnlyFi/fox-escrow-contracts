@@ -4,7 +4,7 @@ pragma solidity ^0.8.11;
 import {DSTest} from "@ds-test/test.sol";
 
 import {OfferFactory} from "../OfferFactory.sol";
-import {LockedJewelOffer} from "../LockedJewelOffer.sol";
+import {LockedTokenOffer} from "../LockedJewelOffer.sol";
 
 contract OfferFactoryTest is DSTest {
     OfferFactory factory;
@@ -22,7 +22,7 @@ contract OfferFactoryTest is DSTest {
     }
 
     function testSetFeeDoesntPropagate() public {
-        LockedJewelOffer offer = factory.createOffer(USDC, 1000);
+        LockedTokenOffer offer = factory.createOffer(USDC, 1000);
 
         uint256 oldFee = offer.fee();
         factory.setFee(oldFee + 100);
@@ -31,7 +31,7 @@ contract OfferFactoryTest is DSTest {
     }
 
     function testCreateOffer() public {
-        LockedJewelOffer offer = factory.createOffer(USDC, 10);
+        LockedTokenOffer offer = factory.createOffer(USDC, 10);
 
         assertEq(address(factory.offers(0)), address(offer));
         assertEq(offer.factory(), address(factory));
