@@ -17,8 +17,8 @@ lens = LockedTokenLens.deploy(Accs.from_deployer())
 
 
 factory = OfferFactory.deploy(Accs.from_deployer())
-# 0x0562e87B1c808Ec5177570b13644C58f41a54075
-# factory = Contract.from_abi("OfferFactory", "0x0562e87B1c808Ec5177570b13644C58f41a54075", OfferFactory.abi)
+# 0xFa27cc94CA57f98b565f8fD165002FB98e1BC362
+# factory = Contract.from_abi("OfferFactory", "0xFa27cc94CA57f98b565f8fD165002FB98e1BC362", OfferFactory.abi)
 
 for token in locked_token_addresses:
     resp = factory.addLockedTokenSupport(token, True)

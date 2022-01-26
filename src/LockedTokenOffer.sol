@@ -1,4 +1,5 @@
-// SPDX-License-Identifier: Unlicense
+// SPDX-License-Identifier: MIT
+
 pragma solidity ^0.8.11;
 
 import {IERC20, ILockedToken, IOwnable, IOfferFactory} from "./interfaces/Interfaces.sol";
@@ -83,7 +84,7 @@ contract LockedTokenOffer {
     }
 
     function _sendFees(uint256 feeAmount) internal {
-        uint256 escrowFeeAmount = mulDiv(feeAmount, 2, 3);  // 2/3rds of fee here
+        uint256 escrowFeeAmount = mulDiv(feeAmount, 2, 3);  // 2/3rds of fee to escrow
         uint256 xFoxFeeAmount = (feeAmount - escrowFeeAmount) / 2;
         uint256 devFeeAmount = feeAmount - escrowFeeAmount - xFoxFeeAmount;
 

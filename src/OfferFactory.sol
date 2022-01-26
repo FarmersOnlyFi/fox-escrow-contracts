@@ -1,4 +1,5 @@
-// SPDX-License-Identifier: Unlicense
+// SPDX-License-Identifier: MIT
+
 pragma solidity ^0.8.11;
 
 import {Ownable} from "./Ownable.sol";
@@ -10,17 +11,33 @@ contract OfferFactory is Ownable {
 
     address public xFoxAddress = 0xb46B7A8160A114091b5E62C2Ee090B0997D99e5a;
     address public devAddress = 0xB989B490F9899a5AD56a4255A3C84457040B59dc;
-    address public escrowMultisigFeeAddress = 0xf5816A16459b606A8692747Ac15F427E845089aa; // TODO
+    address public escrowMultisigFeeAddress = 0xf5816A16459b606A8692747Ac15F427E845089aa;
 
     mapping(address => bool) public supportedTokens;
     LockedTokenOffer[] public offers;
 
     event OfferCreated(address offerAddress, address lockedTokenAddress, address tokenWanted, uint256 amountWanted);
     event LockedTokenSupportUpdate(address lockedTokenAddress, bool supported);
+    event EscrowFeeAddressUpdate(address newAddress, address caller);
+    event DevAddressUpdate(address newAddress, address caller);
 
     function setFee(uint256 _fee) public onlyOwner {
         require(_fee < MAX_FEE, 'Fee to high');
         fee = _fee;
+    }
+
+    function setEscrowFeeAddress(address _newAddress) public onlyOwner {
+        require(_newAddress != address(0), 'Bad address');
+        escrowMultisigFeeAddress = _newAddress;
+
+        emit EscrowFeeAddressUpdate(_newAddress, msg.sender);
+    }
+
+    function setDevAddress(address _newAddress) public onlyOwner {
+        require(_newAddress != address(0), 'Bad address');
+        devAddress = _newAddress;
+
+        emit DevAddressUpdate(_newAddress, msg.sender);
     }
 
     function addLockedTokenSupport(address _lockedToken, bool _supported) public onlyOwner {
