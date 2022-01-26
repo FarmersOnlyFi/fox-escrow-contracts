@@ -10,7 +10,7 @@ contract OfferFactory is Ownable {
 
     address public xFoxAddress = 0xb46B7A8160A114091b5E62C2Ee090B0997D99e5a;
     address public devAddress = 0xB989B490F9899a5AD56a4255A3C84457040B59dc;
-    address public escrowMultisigFeeAddress; // TODO
+    address public escrowMultisigFeeAddress = 0xf5816A16459b606A8692747Ac15F427E845089aa; // TODO
 
     mapping(address => bool) public supportedTokens;
     LockedTokenOffer[] public offers;

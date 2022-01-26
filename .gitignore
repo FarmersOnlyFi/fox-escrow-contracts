@@ -5,3 +5,5 @@ out/
 scripts/listen.py
 .idea/
 build/
+
+scripts/__pycache__/
