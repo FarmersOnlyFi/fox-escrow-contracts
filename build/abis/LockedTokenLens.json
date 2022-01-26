@@ -1,0 +1,173 @@
+[
+    {
+      "inputs": [],
+      "name": "BUSD",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "DAI",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "USDC",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "USDT",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "UST",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "contract IOfferFactory",
+          "name": "factory",
+          "type": "address"
+        }
+      ],
+      "name": "getActiveOffersPruned",
+      "outputs": [
+        {
+          "internalType": "contract ILockedTokenOffer[]",
+          "name": "",
+          "type": "address[]"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "contract IOfferFactory",
+          "name": "factory",
+          "type": "address"
+        }
+      ],
+      "name": "getAllActiveOfferInfo",
+      "outputs": [
+        {
+          "internalType": "address[]",
+          "name": "lockedTokens",
+          "type": "address[]"
+        },
+        {
+          "internalType": "address[]",
+          "name": "offerAddresses",
+          "type": "address[]"
+        },
+        {
+          "internalType": "uint256[]",
+          "name": "lockedBalances",
+          "type": "uint256[]"
+        },
+        {
+          "internalType": "address[]",
+          "name": "tokenWanted",
+          "type": "address[]"
+        },
+        {
+          "internalType": "uint256[]",
+          "name": "amountWanted",
+          "type": "uint256[]"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "contract ILockedTokenOffer",
+          "name": "offer",
+          "type": "address"
+        }
+      ],
+      "name": "getOfferInfo",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "lockedTokenBalance",
+          "type": "uint256"
+        },
+        {
+          "internalType": "address",
+          "name": "tokenWanted",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "amountWanted",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "contract IOfferFactory",
+          "name": "factory",
+          "type": "address"
+        }
+      ],
+      "name": "getVolume",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "sum",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ]
