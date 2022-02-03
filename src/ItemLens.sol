@@ -3,12 +3,11 @@
 pragma solidity ^0.8.11;
 
 import "./interfaces/IERC20.sol";
-import "./interfaces/ILockedToken.sol";
-import "./interfaces/ILockedTokenOffer.sol";
-import "./interfaces/IOfferFactory.sol";
+import "./interfaces/IItemOffer.sol";
+import "./interfaces/IItemOfferFactory.sol";
 import "./interfaces/IOwnable.sol";
 
-contract LockedTokenLens {
+contract ItemLens {
     // supported stablecoins
     address public constant USDC = 0xC6A6cD8E4a0134b37E3595DBac6f738970fC01A6; //0x985458E523dB3d53125813eD68c274899e9DfAb4;
     address public constant USDT = 0xC6A6cD8E4a0134b37E3595DBac6f738970fC01A6; // 0x3C2B8Be99c50593081EAA2A724F0B8285F5aba8f;
@@ -16,7 +15,7 @@ contract LockedTokenLens {
     address public constant UST = 0xE6FCfd410a993572713c47a3638478288d06aB2d; //0x224e64ec1BDce3870a6a6c777eDd450454068FEC;
     address public constant BUSD = 0x3F9E6D6328D83690d74a75C016D90D7e26A7188c; //0xE176EBE47d621b984a73036B9DA5d834411ef734;
 
-    function getVolume(IOfferFactory factory) public view returns (uint256 sum) {
+    function getVolume(IItemOfferFactory factory) public view returns (uint256 sum) {
         address[5] memory stables = [USDC, USDT, DAI, UST, BUSD];
         address factoryOwner = IOwnable(address(factory)).owner();
 
@@ -27,26 +26,26 @@ contract LockedTokenLens {
         sum = volume * 100;
     }
 
-    function getOfferInfo(ILockedTokenOffer offer)
+    function getOfferInfo(IItemOffer offer)
         public
         view
         returns (
-            address lockedToken,
-            uint256 lockedTokenBalance,
+            address itemAddress,
+            uint256 totalItems,
             address tokenWanted,
-            uint256 amountWanted
+            uint256 priceWanted
         )
     {
         return (
-            offer.lockedTokenAddress(),
-            ILockedToken(offer.lockedTokenAddress()).totalBalanceOf(address(offer)),
+            offer.itemAddress(),
+            offer.totalItems(),
             offer.tokenWanted(),
-            offer.amountWanted()
+            offer.priceWanted()
         );
     }
 
-    function getActiveOffersPruned(IOfferFactory factory) public view returns (ILockedTokenOffer[] memory) {
-        ILockedTokenOffer[] memory activeOffers = factory.getActiveOffers();
+    function getActiveOffersPruned(IItemOfferFactory factory) public view returns (IItemOffer[] memory) {
+        IItemOffer[] memory activeOffers = factory.getActiveOffers();
         // determine size of memory array
         uint count;
         for (uint i; i < activeOffers.length; i++) {
@@ -54,42 +53,42 @@ contract LockedTokenLens {
                 count++;
             }
         }
-        ILockedTokenOffer[] memory pruned = new ILockedTokenOffer[](count);
+        IItemOffer[] memory pruned = new IItemOffer[](count);
         for (uint j; j < count; j++) {
             pruned[j] = activeOffers[j];
         }
         return pruned;
     }
 
-    function getAllActiveOfferInfo(IOfferFactory factory)
+    function getAllActiveOfferInfo(IItemOfferFactory factory)
         public
         view
         returns (
-            address[] memory lockedTokens,
+            address[] memory itemAddresses,
             address[] memory offerAddresses,
-            uint256[] memory lockedBalances,
+            uint256[] memory itemBalances,
             address[] memory tokenWanted,
-            uint256[] memory amountWanted
+            uint256[] memory priceWanted
         )
     {
-        ILockedTokenOffer[] memory activeOffers = factory.getActiveOffers();
+        IItemOffer[] memory activeOffers = factory.getActiveOffers();
         uint256 offersLength = activeOffers.length;
-        lockedTokens = new address[](offersLength);
+        itemAddresses = new address[](offersLength);
         offerAddresses = new address[](offersLength);
-        lockedBalances = new uint256[](offersLength);
+        itemBalances = new uint256[](offersLength);
         tokenWanted = new address[](offersLength);
-        amountWanted = new uint256[](offersLength);
+        priceWanted = new uint256[](offersLength);
         uint256 count;
         for (uint256 i; i < activeOffers.length; i++) {
             if (address(activeOffers[i]) != address(0)) {
-                address lockedTokenAddress = activeOffers[i].lockedTokenAddress();
-                uint256 bal = activeOffers[i].totalLockedToken();
+                address itemAddress = activeOffers[i].itemAddress();
+                uint256 bal = activeOffers[i].totalItems();
                 if (bal > 0) {
-                    lockedTokens[count] = lockedTokenAddress;
-                    lockedBalances[count] = bal;
+                    itemAddresses[count] = itemAddress;
                     offerAddresses[count] = address(activeOffers[i]);
+                    itemBalances[count] = bal;
                     tokenWanted[count] = activeOffers[i].tokenWanted();
-                    amountWanted[count] = activeOffers[i].amountWanted();
+                    priceWanted[count] = activeOffers[i].priceWanted();
                     count++;
                 }
             }

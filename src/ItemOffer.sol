@@ -3,40 +3,40 @@
 pragma solidity ^0.8.11;
 
 import "./interfaces/IERC20.sol";
-import "./interfaces/ILockedToken.sol";
-import "./interfaces/IOfferFactory.sol";
+import "./interfaces/IItemOfferFactory.sol";
 import "./interfaces/IOwnable.sol";
 
-contract LockedTokenOffer {
+contract ItemOffer {
     address public immutable factory;
     address public immutable seller;
-    address public immutable lockedTokenAddress;
+    address public immutable itemAddress;
     address public immutable tokenWanted;
-    uint256 public immutable amountWanted;
+    uint256 public immutable priceWanted;
     uint256 public immutable fee; // in bps
     bool public hasEnded = false;
 
-    event OfferFilled(address buyer, uint256 lockedTokenAmount, address token, uint256 tokenAmount);
-    event OfferCanceled(address seller, uint256 lockedTokenAmount);
+    event OfferFilled(address buyer, uint256 itemAmount, address token, uint256 tokenAmount);
+    event OfferCanceled(address seller, uint256 itemAmount);
 
     constructor(
         address _seller,
-        address _lockedTokenAddress,
+        address _itemAddress,
         address _tokenWanted,
-        uint256 _amountWanted,
+        uint256 _priceWanted,
         uint256 _fee
     ) {
         factory = msg.sender;
         seller = _seller;
-        lockedTokenAddress = _lockedTokenAddress;
+        itemAddress = _itemAddress;
         tokenWanted = _tokenWanted;
-        amountWanted = _amountWanted;
+        priceWanted = _priceWanted;
         fee = _fee;
     }
 
     // release trapped funds
     function withdrawTokens(address token) public {
         require(msg.sender == IOwnable(factory).owner());
+        require(token != itemAddress, "cannot withdraw item");
         if (token == 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE) {
             payable(IOwnable(factory).owner()).transfer(address(this).balance);
         } else {
@@ -45,43 +45,46 @@ contract LockedTokenOffer {
         }
     }
 
-    function fill() public {
-        require(hasLockedToken(), "no Locked Token balance");
+    function fill(uint _itemAmount) public {
         require(!hasEnded, "sell has been previously cancelled");
-        uint256 balance = ILockedToken(lockedTokenAddress).totalBalanceOf(address(this));
-        uint256 txFee = mulDiv(amountWanted, fee, 10_000);
+        require(hasItems(), "No items on contract");
+        if (_itemAmount > totalItems()) {
+            _itemAmount = totalItems();
+        }
+        // Compute total amount based on price
+        uint256 totalAmount = priceWanted * _itemAmount;
+        uint256 txFee = mulDiv(totalAmount, fee, 10_000);
 
         // cap fee at 25k
         uint256 maxFee = 25_000 * 10**IERC20(tokenWanted).decimals();
         txFee = txFee > maxFee ? maxFee : txFee;
 
-        uint256 amountAfterFee = amountWanted - txFee;
+        uint256 amountAfterFee = totalAmount - txFee;
         // collect fee
         _sendFees(txFee);
         // exchange assets
         safeTransferFrom(tokenWanted, msg.sender, seller, amountAfterFee);
-        ILockedToken(lockedTokenAddress).transferAll(msg.sender);
+        safeTransfer(itemAddress, msg.sender, _itemAmount);
         // Normalize to 18 decimals
-        IOfferFactory(factory).logTransactionVolume(mulDiv(amountWanted, 1e18, 10**IERC20(tokenWanted).decimals())) ;
-        hasEnded = true;
-        emit OfferFilled(msg.sender, balance, tokenWanted, amountWanted);
+        IItemOfferFactory(factory).logTransactionVolume(mulDiv(totalAmount, 1e18, 10**IERC20(tokenWanted).decimals())) ;
+        emit OfferFilled(msg.sender, _itemAmount, tokenWanted, totalAmount);
     }
 
     function cancel() public {
-        require(hasLockedToken(), "no Locked Token balance");
-        require(msg.sender == seller);
-        uint256 balance = ILockedToken(lockedTokenAddress).totalBalanceOf(address(this));
-        ILockedToken(lockedTokenAddress).transferAll(seller);
+        require(hasItems(), "no items on contract");
+        require(msg.sender == seller, "only seller can cancel");
+        uint256 balance = totalItems();
+        safeTransfer(itemAddress, seller, balance);
         hasEnded = true;
         emit OfferCanceled(seller, balance);
     }
 
-    function hasLockedToken() public view returns (bool) {
-        return ILockedToken(lockedTokenAddress).totalBalanceOf(address(this)) > 0;
+    function hasItems() public view returns (bool) {
+        return IERC20(itemAddress).balanceOf(address(this)) > 0;
     }
 
-    function totalLockedToken() public view returns (uint256) {
-        return ILockedToken(lockedTokenAddress).totalBalanceOf(address(this));
+    function totalItems() public view returns (uint256) {
+        return IERC20(itemAddress).balanceOf(address(this));
     }
 
     function mulDiv(
@@ -93,13 +96,13 @@ contract LockedTokenOffer {
     }
 
     function _sendFees(uint256 feeAmount) internal {
-        uint256 escrowFeeAmount = mulDiv(feeAmount, 2, 3);  // 2/3rds of fee to escrow
+        uint256 escrowFeeAmount = mulDiv(feeAmount, 1, 3);
         uint256 xFoxFeeAmount = (feeAmount - escrowFeeAmount) / 2;
         uint256 devFeeAmount = feeAmount - escrowFeeAmount - xFoxFeeAmount;
 
-        safeTransferFrom(tokenWanted, msg.sender, IOfferFactory(factory).escrowMultisigFeeAddress(), escrowFeeAmount);
-        safeTransferFrom(tokenWanted, msg.sender, IOfferFactory(factory).xFoxAddress(), xFoxFeeAmount);
-        safeTransferFrom(tokenWanted, msg.sender, IOfferFactory(factory).devAddress(), devFeeAmount);
+        safeTransferFrom(tokenWanted, msg.sender, IItemOfferFactory(factory).escrowMultisigFeeAddress(), escrowFeeAmount);
+        safeTransferFrom(tokenWanted, msg.sender, IItemOfferFactory(factory).xFoxAddress(), xFoxFeeAmount);
+        safeTransferFrom(tokenWanted, msg.sender, IItemOfferFactory(factory).devAddress(), devFeeAmount);
     }
 
     function safeTransfer(

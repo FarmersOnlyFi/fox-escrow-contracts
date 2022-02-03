@@ -3,10 +3,10 @@
 pragma solidity ^0.8.11;
 
 import "OpenZeppelin/openzeppelin-contracts@4.4.0/contracts/access/Ownable.sol";
-import "./LockedTokenOffer.sol";
+import "./ItemOffer.sol";
 
-contract OfferFactory is Ownable {
-    uint256 public fee = 120; // in bps
+contract ItemOfferFactory is Ownable {
+    uint256 public fee = 200; // in bps
     uint256 public MAX_FEE = 400; // 4%
     uint256 public totalVolume = 0;
 
@@ -14,12 +14,12 @@ contract OfferFactory is Ownable {
     address public devAddress = 0xB989B490F9899a5AD56a4255A3C84457040B59dc;
     address public escrowMultisigFeeAddress = 0xf5816A16459b606A8692747Ac15F427E845089aa;
 
-    mapping(address => bool) public supportedTokens;
+    mapping(address => bool) public supportedItems;
     mapping(address => bool) public isOfferContract;
-    LockedTokenOffer[] public offers;
+    ItemOffer[] public offers;
 
-    event OfferCreated(address offerAddress, address lockedTokenAddress, address tokenWanted, uint256 amountWanted);
-    event LockedTokenSupportUpdate(address lockedTokenAddress, bool supported);
+    event OfferCreated(address offerAddress, address ItemAddress, address tokenWanted, uint256 priceWanted);
+    event ItemSupportUpdate(address ItemAddress, bool supported);
     event EscrowFeeAddressUpdate(address newAddress, address caller);
     event DevAddressUpdate(address newAddress, address caller);
 
@@ -42,18 +42,18 @@ contract OfferFactory is Ownable {
         emit DevAddressUpdate(_newAddress, msg.sender);
     }
 
-    function addLockedTokenSupport(address _lockedToken, bool _supported) public onlyOwner {
-        supportedTokens[_lockedToken] = _supported;
+    function addItemSupport(address _itemAddress, bool _supported) public onlyOwner {
+        supportedItems[_itemAddress] = _supported;
 
-        emit LockedTokenSupportUpdate(_lockedToken, _supported);
+        emit ItemSupportUpdate(_itemAddress, _supported);
     }
 
-    function createOffer(address _lockedTokenAddress, address _tokenWanted, uint256 _amountWanted) public returns (LockedTokenOffer) {
-        require(supportedTokens[_lockedTokenAddress], 'Locked Token not supported');
-        LockedTokenOffer offer = new LockedTokenOffer(msg.sender, _lockedTokenAddress, _tokenWanted, _amountWanted, fee);
+    function createOffer(address _ItemAddress, address _tokenWanted, uint256 _priceWanted) public returns (ItemOffer) {
+        require(supportedItems[_ItemAddress], 'Item not supported');
+        ItemOffer offer = new ItemOffer(msg.sender, _ItemAddress, _tokenWanted, _priceWanted, fee);
         offers.push(offer);
         isOfferContract[address(offer)] = true;
-        emit OfferCreated(address(offer), _lockedTokenAddress, _tokenWanted, _amountWanted);
+        emit OfferCreated(address(offer), _ItemAddress, _tokenWanted, _priceWanted);
         return offer;
     }
 
@@ -62,15 +62,15 @@ contract OfferFactory is Ownable {
         totalVolume = totalVolume + amount;
     }
 
-    function getActiveOffersByOwner() public view returns (LockedTokenOffer[] memory, LockedTokenOffer[] memory) {
-        LockedTokenOffer[] memory myBids = new LockedTokenOffer[](offers.length);
-        LockedTokenOffer[] memory otherBids = new LockedTokenOffer[](offers.length);
+    function getActiveOffersByOwner() public view returns (ItemOffer[] memory, ItemOffer[] memory) {
+        ItemOffer[] memory myBids = new ItemOffer[](offers.length);
+        ItemOffer[] memory otherBids = new ItemOffer[](offers.length);
 
         uint256 myBidsCount;
         uint256 otherBidsCount;
         for (uint256 i; i < offers.length; i++) {
-            LockedTokenOffer offer = LockedTokenOffer(offers[i]);
-            if (offer.hasLockedToken() && !offer.hasEnded()) {
+            ItemOffer offer = ItemOffer(offers[i]);
+            if (offer.hasItems() && !offer.hasEnded()) {
                 if (offer.seller() == msg.sender) {
                     myBids[myBidsCount++] = offers[i];
                 } else {
@@ -82,12 +82,12 @@ contract OfferFactory is Ownable {
         return (myBids, otherBids);
     }
 
-    function getActiveOffers() public view returns (LockedTokenOffer[] memory) {
-        LockedTokenOffer[] memory activeOffers = new LockedTokenOffer[](offers.length);
+    function getActiveOffers() public view returns (ItemOffer[] memory) {
+        ItemOffer[] memory activeOffers = new ItemOffer[](offers.length);
         uint256 count;
         for (uint256 i; i < offers.length; i++) {
-            LockedTokenOffer offer = LockedTokenOffer(offers[i]);
-            if (offer.hasLockedToken() && !offer.hasEnded()) {
+            ItemOffer offer = ItemOffer(offers[i]);
+            if (offer.hasItems() && !offer.hasEnded()) {
                 activeOffers[count++] = offer;
             }
         }
@@ -95,12 +95,12 @@ contract OfferFactory is Ownable {
         return activeOffers;
     }
 
-    function getActiveOffersByRange(uint256 start, uint256 end) public view returns (LockedTokenOffer[] memory) {
-        LockedTokenOffer[] memory activeOffers = new LockedTokenOffer[](end - start);
+    function getActiveOffersByRange(uint256 start, uint256 end) public view returns (ItemOffer[] memory) {
+        ItemOffer[] memory activeOffers = new ItemOffer[](end - start);
 
         uint256 count;
         for (uint256 i = start; i < end; i++) {
-            if (offers[i].hasLockedToken() && !offers[i].hasEnded()) {
+            if (offers[i].hasItems() && !offers[i].hasEnded()) {
                 activeOffers[count++] = offers[i];
             }
         }
