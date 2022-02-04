@@ -16,15 +16,16 @@ contract ItemOfferFactory is Ownable {
 
     mapping(address => bool) public supportedItems;
     mapping(address => bool) public isOfferContract;
+    mapping(address => ItemOffer[]) public userOffers;
     ItemOffer[] public offers;
 
-    event OfferCreated(address offerAddress, address ItemAddress, address tokenWanted, uint256 priceWanted);
-    event ItemSupportUpdate(address ItemAddress, bool supported);
+    event OfferCreated(address indexed offerAddress, address indexed ItemAddress, address indexed tokenWanted, uint256 priceWanted);
+    event ItemSupportUpdate(address indexed ItemAddress, bool supported);
     event EscrowFeeAddressUpdate(address newAddress, address caller);
     event DevAddressUpdate(address newAddress, address caller);
 
     function setFee(uint256 _fee) public onlyOwner {
-        require(_fee < MAX_FEE, 'Fee to high');
+        require(_fee < MAX_FEE, 'Fee too high');
         fee = _fee;
     }
 

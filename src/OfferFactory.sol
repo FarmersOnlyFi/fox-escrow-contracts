@@ -16,15 +16,16 @@ contract OfferFactory is Ownable {
 
     mapping(address => bool) public supportedTokens;
     mapping(address => bool) public isOfferContract;
+    mapping(address => LockedTokenOffer[]) public userOffers;
     LockedTokenOffer[] public offers;
 
-    event OfferCreated(address offerAddress, address lockedTokenAddress, address tokenWanted, uint256 amountWanted);
-    event LockedTokenSupportUpdate(address lockedTokenAddress, bool supported);
+    event OfferCreated(address indexed offerAddress, address indexed lockedTokenAddress, address indexed tokenWanted, uint256 amountWanted);
+    event LockedTokenSupportUpdate(address indexed lockedTokenAddress, bool supported);
     event EscrowFeeAddressUpdate(address newAddress, address caller);
     event DevAddressUpdate(address newAddress, address caller);
 
     function setFee(uint256 _fee) public onlyOwner {
-        require(_fee < MAX_FEE, 'Fee to high');
+        require(_fee < MAX_FEE, 'Fee too high');
         fee = _fee;
     }
 
@@ -52,6 +53,7 @@ contract OfferFactory is Ownable {
         require(supportedTokens[_lockedTokenAddress], 'Locked Token not supported');
         LockedTokenOffer offer = new LockedTokenOffer(msg.sender, _lockedTokenAddress, _tokenWanted, _amountWanted, fee);
         offers.push(offer);
+        userOffers[msg.sender].push(offer);
         isOfferContract[address(offer)] = true;
         emit OfferCreated(address(offer), _lockedTokenAddress, _tokenWanted, _amountWanted);
         return offer;
@@ -91,8 +93,11 @@ contract OfferFactory is Ownable {
                 activeOffers[count++] = offer;
             }
         }
-
         return activeOffers;
+    }
+
+    function getUserOffers(address _user) external view returns (LockedTokenOffer[] memory) {
+        return userOffers[_user];
     }
 
     function getActiveOffersByRange(uint256 start, uint256 end) public view returns (LockedTokenOffer[] memory) {

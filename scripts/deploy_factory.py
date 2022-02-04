@@ -23,6 +23,15 @@ factory = OfferFactory.deploy(Accs.from_deployer())
 # factory = Contract.from_abi("OfferFactory", "0xFa27cc94CA57f98b565f8fD165002FB98e1BC362", OfferFactory.abi)
 # TestNet:
 
+usdc = USDC.deploy(Accs.from_deployer())
+jewel = JewelToken.deploy("JEWEL", "JEWEL", 1e33, 1e33, 0, 1e10, Accs.from_deployer())
+factory.addLockedTokenSupport(jewel, True, Accs.from_deployer())
+
+off_resp = factory.createOffer(jewel, usdc, 1e20, Accs.from_dev())
+offer1 = Contract.from_abi("ItemOffer", off_resp.events["OfferCreated"]['offerAddress'], LockedTokenOffer.abi)
+
+
+
 for token in locked_token_addresses:
     resp = factory.addLockedTokenSupport(token, True)
 

@@ -2,21 +2,23 @@
 
 pragma solidity ^0.8.11;
 
+import "OpenZeppelin/openzeppelin-contracts@4.4.0/contracts/security/ReentrancyGuard.sol";
 import "./interfaces/IERC20.sol";
 import "./interfaces/IItemOfferFactory.sol";
 import "./interfaces/IOwnable.sol";
 
-contract ItemOffer {
+
+contract ItemOffer is ReentrancyGuard  {
+    bool public hasEnded = false;
     address public immutable factory;
     address public immutable seller;
     address public immutable itemAddress;
     address public immutable tokenWanted;
     uint256 public immutable priceWanted;
     uint256 public immutable fee; // in bps
-    bool public hasEnded = false;
 
-    event OfferFilled(address buyer, uint256 itemAmount, address token, uint256 tokenAmount);
-    event OfferCanceled(address seller, uint256 itemAmount);
+    event OfferFilled(address indexed buyer, uint256 itemAmount, address indexed token, uint256 tokenAmount);
+    event OfferCanceled(address indexed seller, uint256 itemAmount);
 
     constructor(
         address _seller,
@@ -34,8 +36,8 @@ contract ItemOffer {
     }
 
     // release trapped funds
-    function withdrawTokens(address token) public {
-        require(msg.sender == IOwnable(factory).owner());
+    function withdrawTokens(address token) external nonReentrant {
+        require(msg.sender == IOwnable(factory).owner(), "not owner");
         require(token != itemAddress, "cannot withdraw item");
         if (token == 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE) {
             payable(IOwnable(factory).owner()).transfer(address(this).balance);
@@ -45,8 +47,8 @@ contract ItemOffer {
         }
     }
 
-    // release trapped funds
-    function recoverItems(uint256 _itemAmount) public {
+    // Allow seller to recover items without canceling
+    function recoverItems(uint256 _itemAmount) external nonReentrant {
         require(msg.sender == seller, "Only seller can withdraw");
         require(hasItems(), "No items to withdraw");
         if (_itemAmount > totalItems()) {
@@ -55,7 +57,7 @@ contract ItemOffer {
         safeTransfer(itemAddress, seller, _itemAmount);
     }
 
-    function fill(uint _itemAmount) public {
+    function fill(uint _itemAmount) external nonReentrant {
         require(!hasEnded, "sell has been previously cancelled");
         require(hasItems(), "No items on contract");
         if (_itemAmount > totalItems()) {
@@ -80,7 +82,7 @@ contract ItemOffer {
         emit OfferFilled(msg.sender, _itemAmount, tokenWanted, totalAmount);
     }
 
-    function cancel() public {
+    function cancel() external nonReentrant {
         require(hasItems(), "no items on contract");
         require(msg.sender == seller, "only seller can cancel");
         uint256 balance = totalItems();

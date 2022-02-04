@@ -16,7 +16,7 @@ contract LockedTokenLens {
     address public constant UST = 0xE6FCfd410a993572713c47a3638478288d06aB2d; //0x224e64ec1BDce3870a6a6c777eDd450454068FEC;
     address public constant BUSD = 0x3F9E6D6328D83690d74a75C016D90D7e26A7188c; //0xE176EBE47d621b984a73036B9DA5d834411ef734;
 
-    function getVolume(IOfferFactory factory) public view returns (uint256 sum) {
+    function getVolume(IOfferFactory factory) external view returns (uint256 sum) {
         address[5] memory stables = [USDC, USDT, DAI, UST, BUSD];
         address factoryOwner = IOwnable(address(factory)).owner();
 
@@ -28,7 +28,7 @@ contract LockedTokenLens {
     }
 
     function getOfferInfo(ILockedTokenOffer offer)
-        public
+        external
         view
         returns (
             address lockedToken,
@@ -45,7 +45,7 @@ contract LockedTokenLens {
         );
     }
 
-    function getActiveOffersPruned(IOfferFactory factory) public view returns (ILockedTokenOffer[] memory) {
+    function getActiveOffersPruned(IOfferFactory factory) external view returns (ILockedTokenOffer[] memory) {
         ILockedTokenOffer[] memory activeOffers = factory.getActiveOffers();
         // determine size of memory array
         uint count;
@@ -62,6 +62,41 @@ contract LockedTokenLens {
     }
 
     function getAllActiveOfferInfo(IOfferFactory factory)
+    external
+    view
+    returns (
+        address[] memory lockedTokens,
+        address[] memory offerAddresses,
+        uint256[] memory lockedBalances,
+        address[] memory tokenWanted,
+        uint256[] memory amountWanted
+    )
+    {
+        ILockedTokenOffer[] memory offers = factory.getActiveOffers();
+        uint256 offersLength = offers.length;
+        lockedTokens = new address[](offersLength);
+        offerAddresses = new address[](offersLength);
+        lockedBalances = new uint256[](offersLength);
+        tokenWanted = new address[](offersLength);
+        amountWanted = new uint256[](offersLength);
+        uint256 count;
+        for (uint256 i; i < offers.length; i++) {
+            if (address(offers[i]) != address(0)) {
+                address lockedTokenAddress = offers[i].lockedTokenAddress();
+                uint256 bal = offers[i].totalLockedToken();
+                if (bal > 0) {
+                    lockedTokens[count] = lockedTokenAddress;
+                    lockedBalances[count] = bal;
+                    offerAddresses[count] = address(offers[i]);
+                    tokenWanted[count] = offers[i].tokenWanted();
+                    amountWanted[count] = offers[i].amountWanted();
+                    count++;
+                }
+            }
+        }
+    }
+
+    function getOfferInfo(ILockedTokenOffer[] calldata offers)
         public
         view
         returns (
@@ -72,24 +107,23 @@ contract LockedTokenLens {
             uint256[] memory amountWanted
         )
     {
-        ILockedTokenOffer[] memory activeOffers = factory.getActiveOffers();
-        uint256 offersLength = activeOffers.length;
+        uint256 offersLength = offers.length;
         lockedTokens = new address[](offersLength);
         offerAddresses = new address[](offersLength);
         lockedBalances = new uint256[](offersLength);
         tokenWanted = new address[](offersLength);
         amountWanted = new uint256[](offersLength);
         uint256 count;
-        for (uint256 i; i < activeOffers.length; i++) {
-            if (address(activeOffers[i]) != address(0)) {
-                address lockedTokenAddress = activeOffers[i].lockedTokenAddress();
-                uint256 bal = activeOffers[i].totalLockedToken();
+        for (uint256 i; i < offers.length; i++) {
+            if (address(offers[i]) != address(0)) {
+                address lockedTokenAddress = offers[i].lockedTokenAddress();
+                uint256 bal = offers[i].totalLockedToken();
                 if (bal > 0) {
                     lockedTokens[count] = lockedTokenAddress;
                     lockedBalances[count] = bal;
-                    offerAddresses[count] = address(activeOffers[i]);
-                    tokenWanted[count] = activeOffers[i].tokenWanted();
-                    amountWanted[count] = activeOffers[i].amountWanted();
+                    offerAddresses[count] = address(offers[i]);
+                    tokenWanted[count] = offers[i].tokenWanted();
+                    amountWanted[count] = offers[i].amountWanted();
                     count++;
                 }
             }

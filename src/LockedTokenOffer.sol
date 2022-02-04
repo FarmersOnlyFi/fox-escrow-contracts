@@ -2,22 +2,24 @@
 
 pragma solidity ^0.8.11;
 
+import "OpenZeppelin/openzeppelin-contracts@4.4.0/contracts/security/ReentrancyGuard.sol";
 import "./interfaces/IERC20.sol";
 import "./interfaces/ILockedToken.sol";
 import "./interfaces/IOfferFactory.sol";
 import "./interfaces/IOwnable.sol";
 
-contract LockedTokenOffer {
+
+contract LockedTokenOffer is ReentrancyGuard {
+    bool public hasEnded = false;
     address public immutable factory;
     address public immutable seller;
     address public immutable lockedTokenAddress;
     address public immutable tokenWanted;
     uint256 public immutable amountWanted;
     uint256 public immutable fee; // in bps
-    bool public hasEnded = false;
 
-    event OfferFilled(address buyer, uint256 lockedTokenAmount, address token, uint256 tokenAmount);
-    event OfferCanceled(address seller, uint256 lockedTokenAmount);
+    event OfferFilled(address indexed buyer, uint256 lockedTokenAmount, address indexed token, uint256 tokenAmount);
+    event OfferCanceled(address indexed seller, uint256 lockedTokenAmount);
 
     constructor(
         address _seller,
@@ -35,8 +37,8 @@ contract LockedTokenOffer {
     }
 
     // release trapped funds
-    function withdrawTokens(address token) public {
-        require(msg.sender == IOwnable(factory).owner());
+    function withdrawTokens(address token) external nonReentrant {
+        require(msg.sender == IOwnable(factory).owner(), "not owner");
         if (token == 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE) {
             payable(IOwnable(factory).owner()).transfer(address(this).balance);
         } else {
@@ -45,7 +47,7 @@ contract LockedTokenOffer {
         }
     }
 
-    function fill() public {
+    function fill() external nonReentrant {
         require(hasLockedToken(), "no Locked Token balance");
         require(!hasEnded, "sell has been previously cancelled");
         uint256 balance = ILockedToken(lockedTokenAddress).totalBalanceOf(address(this));
@@ -67,9 +69,9 @@ contract LockedTokenOffer {
         emit OfferFilled(msg.sender, balance, tokenWanted, amountWanted);
     }
 
-    function cancel() public {
+    function cancel() external nonReentrant {
         require(hasLockedToken(), "no Locked Token balance");
-        require(msg.sender == seller);
+        require(msg.sender == seller, "only seller can cancel");
         uint256 balance = ILockedToken(lockedTokenAddress).totalBalanceOf(address(this));
         ILockedToken(lockedTokenAddress).transferAll(seller);
         hasEnded = true;
