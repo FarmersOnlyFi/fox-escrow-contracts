@@ -42,7 +42,7 @@ busd = Contract.from_abi("BUSD", "0x3F9E6D6328D83690d74a75C016D90D7e26A7188c", B
 ust = Contract.from_abi("UST", "0xE6FCfd410a993572713c47a3638478288d06aB2d", UST.abi)
 jewel = Contract.from_abi("JEWEL", "0x25Cb9C2720B88E336c374CF24be68D42bA7243A4", JewelToken.abi)
 viper = Contract.from_abi("JEWEL", "0x4d378E5e189f435B3B1879772A2C2A4c76F5eA36", JewelToken.abi)
-gold = DfkItems[-1]
+gold = DfkItem[-1]
 
 # lens = LockedTokenLens[-1]
 #
@@ -87,10 +87,11 @@ def mint_all(acc):
 
     Accs.dev.transfer(acc, 2e18)
 
-# crypto_vegan = "0x0C651AEcDf68600a2458Ed1A3f36f2c974D43234"
-# psybermonk = "0x2A8d9fEe2ECD79c8d52244260C0A9BE945DB4951"
-# sammyboi = "0xe36093669f8d05f555323E9F0Aee6A2BC41097C1"
-mint_all(sammyboi)
+crypto_vegan = "0x0C651AEcDf68600a2458Ed1A3f36f2c974D43234"
+psybermonk = "0x2A8d9fEe2ECD79c8d52244260C0A9BE945DB4951"
+sammyboi = "0xe36093669f8d05f555323E9F0Aee6A2BC41097C1"
+django = "0xfF03EE414bB1B77b424C697931C836433F194fDb"
+mint_all(django)
 
 
 # Create offer

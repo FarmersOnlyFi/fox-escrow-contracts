@@ -45,6 +45,16 @@ contract ItemOffer {
         }
     }
 
+    // release trapped funds
+    function recoverItems(uint256 _itemAmount) public {
+        require(msg.sender == seller, "Only seller can withdraw");
+        require(hasItems(), "No items to withdraw");
+        if (_itemAmount > totalItems()) {
+            _itemAmount = totalItems();
+        }
+        safeTransfer(itemAddress, seller, _itemAmount);
+    }
+
     function fill(uint _itemAmount) public {
         require(!hasEnded, "sell has been previously cancelled");
         require(hasItems(), "No items on contract");
