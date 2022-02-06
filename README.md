@@ -1,6 +1,13 @@
-# Locked Token OTC
+# FoxSwap Escrow Contracts
 
-Contracts to allow trustless trading of locked tokens.
+Contracts to allow trustless trading of locked tokens and DFK items.
+
+### Harmony MainNet Contracts
+
+- OfferFactory: `0x8773d7FCaC1A2811BCD29039331E9B0B9e584d00`
+- OfferLens: `0x924715d0690e75D94A4c14290Ac3B4Ae5F4A3f6a`
+- ItemOfferFactory: `0x65EC385A6ab6f1081e8862c406c73f4edc6C0eEb`
+- ItemLens `0xd550e4a7ab33c45C64116b8d47E459DfeEb557d0`
 
 
 ### Business Logic:

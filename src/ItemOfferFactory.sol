@@ -6,7 +6,7 @@ import "OpenZeppelin/openzeppelin-contracts@4.4.0/contracts/access/Ownable.sol";
 import "./ItemOffer.sol";
 
 contract ItemOfferFactory is Ownable {
-    uint256 public fee = 200; // in bps
+    uint256 public fee = 99; // in bps
     uint256 public MAX_FEE = 400; // 4%
     uint256 public totalVolume = 0;
 

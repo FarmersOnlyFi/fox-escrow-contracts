@@ -108,9 +108,9 @@ contract ItemOffer is ReentrancyGuard  {
     }
 
     function _sendFees(uint256 feeAmount) internal {
-        uint256 escrowFeeAmount = mulDiv(feeAmount, 1, 3);
-        uint256 xFoxFeeAmount = (feeAmount - escrowFeeAmount) / 2;
-        uint256 devFeeAmount = feeAmount - escrowFeeAmount - xFoxFeeAmount;
+        uint256 escrowFeeAmount = mulDiv(feeAmount, 1, 2);
+        uint256 devFeeAmount = mulDiv(feeAmount, 1, 3);
+        uint256 xFoxFeeAmount = feeAmount - escrowFeeAmount - devFeeAmount;
 
         safeTransferFrom(tokenWanted, msg.sender, IItemOfferFactory(factory).escrowMultisigFeeAddress(), escrowFeeAmount);
         safeTransferFrom(tokenWanted, msg.sender, IItemOfferFactory(factory).xFoxAddress(), xFoxFeeAmount);
